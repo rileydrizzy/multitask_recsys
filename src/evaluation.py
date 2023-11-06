@@ -40,7 +40,6 @@ def mrr_score(model, test, train=None):
     mrrs = []
 
     for user_id, row in enumerate(test):
-
         if not len(row.indices):
             continue
 

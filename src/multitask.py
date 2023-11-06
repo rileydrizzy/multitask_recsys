@@ -21,7 +21,7 @@ class MultitaskModel(object):
     score is obtained by processing the user and item representation
     through an MLP network [2]_.
 
-    The factorization loss is constructed through negative sampling: 
+    The factorization loss is constructed through negative sampling:
     for any known user-item pair, one or more items are randomly
     sampled to act as negatives (expressing a lack of preference
     by the user for the sampled item). The regression training is
@@ -72,21 +72,22 @@ class MultitaskModel(object):
 
     """
 
-    def __init__(self,
-                 interactions,
-                 factorization_weight = 0.5,
-                 regression_weight = 0.5,
-                 embedding_dim=32,
-                 n_iter=1,
-                 batch_size=256,
-                 l2=0.0,
-                 learning_rate=1e-3,
-                 optimizer_func=None,
-                 use_cuda=False,
-                 representation=None,
-                 sparse=False,
-                 random_state=None):
-
+    def __init__(
+        self,
+        interactions,
+        factorization_weight=0.5,
+        regression_weight=0.5,
+        embedding_dim=32,
+        n_iter=1,
+        batch_size=256,
+        l2=0.0,
+        learning_rate=1e-3,
+        optimizer_func=None,
+        use_cuda=False,
+        representation=None,
+        sparse=False,
+        random_state=None,
+    ):
         self._factorization_weight = factorization_weight
         self._regression_weight = regression_weight
         self._embedding_dim = embedding_dim
@@ -100,34 +101,35 @@ class MultitaskModel(object):
         self._optimizer_func = optimizer_func
         self._random_state = random_state or np.random.RandomState()
 
-        (self._num_users,
-         self._num_items) = (interactions.num_users,
-                             interactions.num_items)
+        (self._num_users, self._num_items) = (
+            interactions.num_users,
+            interactions.num_items,
+        )
 
         if self._representation is not None:
-            self._net = utils.gpu(self._representation,
-                                  self._use_cuda)
+            self._net = utils.gpu(self._representation, self._use_cuda)
         else:
             self._net = utils.gpu(
-                MultiTaskNet(self._num_users,
-                             self._num_items,
-                             self._embedding_dim,
-                             sparse=self._sparse),
-                self._use_cuda
+                MultiTaskNet(
+                    self._num_users,
+                    self._num_items,
+                    self._embedding_dim,
+                    sparse=self._sparse,
+                ),
+                self._use_cuda,
             )
 
         if self._optimizer_func is None:
             self._optimizer = optim.Adam(
                 self._net.parameters(),
                 weight_decay=self._l2,
-                lr=self._learning_rate
+                lr=self._learning_rate,
             )
         else:
             self._optimizer = self._optimizer_func(self._net.parameters())
 
         self._factorization_loss_func = losses.bpr_loss
         self._regression_loss_func = losses.regression_loss
-
 
     def _check_input(self, user_ids, item_ids, allow_items_none=False):
         """
@@ -149,8 +151,9 @@ class MultitaskModel(object):
             user_id_max = user_ids.max()
 
         if user_id_max >= self._num_users:
-            raise ValueError('Maximum user id greater '
-                             'than number of users in model.')
+            raise ValueError(
+                "Maximum user id greater " "than number of users in model."
+            )
 
         if allow_items_none and item_ids is None:
             return
@@ -161,8 +164,9 @@ class MultitaskModel(object):
             item_id_max = item_ids.max()
 
         if item_id_max >= self._num_items:
-            raise ValueError('Maximum item id greater '
-                             'than number of items in model.')
+            raise ValueError(
+                "Maximum item id greater " "than number of items in model."
+            )
 
     def fit(self, interactions):
         """
@@ -183,10 +187,10 @@ class MultitaskModel(object):
 
         factorization_loss: float
             Mean factorization loss over the epoch.
-   
+
         regression_loss: float
             Mean regression loss over the epoch.
-    
+
         epoch_loss: float
             Joint weighted model loss over the epoch.
         """
@@ -197,61 +201,63 @@ class MultitaskModel(object):
         self._check_input(user_ids, item_ids)
 
         for _ in range(self._n_iter):
+            users, items, ratings = utils.shuffle(
+                [user_ids, item_ids, interactions.ratings],
+                random_state=self._random_state,
+            )
 
-            users, items, ratings = utils.shuffle([user_ids,
-                                                   item_ids,
-                                                   interactions.ratings],
-                                                   random_state=self._random_state)
-
-            user_ids_tensor = utils.gpu(torch.from_numpy(users),
-                                        self._use_cuda)
-            item_ids_tensor = utils.gpu(torch.from_numpy(items),
-                                        self._use_cuda)
-            ratings_tensor = utils.gpu(torch.from_numpy(ratings),
-                                       self._use_cuda)
+            user_ids_tensor = utils.gpu(
+                torch.from_numpy(users), self._use_cuda
+            )
+            item_ids_tensor = utils.gpu(
+                torch.from_numpy(items), self._use_cuda
+            )
+            ratings_tensor = utils.gpu(
+                torch.from_numpy(ratings), self._use_cuda
+            )
 
             epoch_factorization_loss = []
             epoch_regression_loss = []
             epoch_loss = []
 
-            for (batch_user,
-                 batch_item,
-                 batch_ratings) in utils.minibatch([user_ids_tensor,
-                                                    item_ids_tensor,
-                                                    ratings_tensor],
-                                                    batch_size=self._batch_size):
-
+            for batch_user, batch_item, batch_ratings in utils.minibatch(
+                [user_ids_tensor, item_ids_tensor, ratings_tensor],
+                batch_size=self._batch_size,
+            ):
                 positive_prediction, score = self._net(batch_user, batch_item)
                 negative_prediction = self._get_negative_prediction(batch_user)
 
                 self._optimizer.zero_grad()
 
-                #Losses
+                # Losses
                 factorization_loss = self._factorization_loss_func(
-                                   positive_prediction,
-                                   negative_prediction)
+                    positive_prediction, negative_prediction
+                )
                 epoch_factorization_loss.append(factorization_loss.item())
 
-                regression_loss = self._regression_loss_func(batch_ratings,
-                                                             score)
+                regression_loss = self._regression_loss_func(
+                    batch_ratings, score
+                )
                 epoch_regression_loss.append(regression_loss.item())
 
-                loss = (self._factorization_weight * factorization_loss +
-                       self._regression_weight * regression_loss)
+                loss = (
+                    self._factorization_weight * factorization_loss
+                    + self._regression_weight * regression_loss
+                )
                 epoch_loss.append(loss.item())
 
                 loss.backward()
                 self._optimizer.step()
 
+        return (
+            np.mean(epoch_factorization_loss),
+            np.mean(epoch_regression_loss),
+            np.mean(epoch_loss),
+        )
 
-        return (np.mean(epoch_factorization_loss), 
-                np.mean(epoch_regression_loss),
-                np.mean(epoch_loss))
-
-        
     def _get_negative_prediction(self, user_ids):
         """
-        Generate negative predictions for user-item interactions, 
+        Generate negative predictions for user-item interactions,
         corresponds to p_ij^- in the assignment.
 
         Parameters
@@ -269,15 +275,15 @@ class MultitaskModel(object):
             of shape (batch,)
         """
 
-        negative_items = self._random_state.randint(0, self._num_items,
-                                                    len(user_ids),
-                                                    dtype=np.int64)
-        negative_var = utils.gpu(torch.from_numpy(negative_items),
-                                 self._use_cuda)
+        negative_items = self._random_state.randint(
+            0, self._num_items, len(user_ids), dtype=np.int64
+        )
+        negative_var = utils.gpu(
+            torch.from_numpy(negative_items), self._use_cuda
+        )
         negative_prediction, _ = self._net(user_ids, negative_var)
 
         return negative_prediction
-
 
     def predict(self, user_ids, item_ids=None):
         """
@@ -305,10 +311,13 @@ class MultitaskModel(object):
         """
 
         self._check_input(user_ids, item_ids, allow_items_none=True)
-        user_ids, item_ids = utils.process_ids(user_ids, item_ids,
-                                               self._num_items, self._use_cuda)
+        user_ids, item_ids = utils.process_ids(
+            user_ids, item_ids, self._num_items, self._use_cuda
+        )
 
         positive_prediction, score = self._net(user_ids, item_ids)
 
-        return utils.cpu(positive_prediction).detach().numpy().flatten(), \
-               utils.cpu(score).detach().numpy().flatten()
+        return (
+            utils.cpu(positive_prediction).detach().numpy().flatten(),
+            utils.cpu(score).detach().numpy().flatten(),
+        )

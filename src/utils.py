@@ -30,12 +30,12 @@ def minibatch(tensors, batch_size=128):
         Size of the batches to be returnes
     """
     for i in range(0, len(tensors[0]), batch_size):
-        yield [x[i:i + batch_size] for x in tensors]
+        yield [x[i : i + batch_size] for x in tensors]
 
 
 def process_ids(user_ids, item_ids, num_items, use_cuda):
     """
-    Process user_ids and provide all item_ids if 
+    Process user_ids and provide all item_ids if
     they have not been supplied
 
     Parameters
@@ -101,8 +101,7 @@ def shuffle(arrays, random_state=None):
 
     """
     if len(set(len(x) for x in arrays)) != 1:
-        raise ValueError('All inputs to shuffle must have '
-                         'the same length.')
+        raise ValueError("All inputs to shuffle must have " "the same length.")
 
     if random_state is None:
         random_state = np.random.RandomState()

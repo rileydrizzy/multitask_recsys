@@ -5,6 +5,7 @@ Loss functions for recommender models.
 import torch
 import utils
 
+
 def bpr_loss(positive_predictions, negative_predictions, mask=None):
     """
     Bayesian Personalised Ranking [1]_ pairwise loss function.
@@ -34,8 +35,7 @@ def bpr_loss(positive_predictions, negative_predictions, mask=None):
        uncertainty in artificial intelligence. AUAI Press, 2009.
     """
 
-    loss = (1.0 - torch.sigmoid(positive_predictions -
-                                negative_predictions))
+    loss = 1.0 - torch.sigmoid(positive_predictions - negative_predictions)
 
     if mask is None:
         mask = torch.ones_like(loss)
@@ -66,4 +66,3 @@ def regression_loss(observed_ratings, predicted_ratings):
 
     utils.assert_no_grad(observed_ratings)
     return ((observed_ratings - predicted_ratings) ** 2).mean()
-
