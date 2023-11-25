@@ -1,10 +1,14 @@
 import torch
+import random
 import numpy as np
 
 
 def gpu(tensor, gpu=False):
     if gpu:
-        return tensor.cuda()
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            return tensor.to("mps")
+        else:
+            return tensor.cuda()
     else:
         return tensor
 
@@ -33,7 +37,7 @@ def minibatch(tensors, batch_size=128):
         yield [x[i : i + batch_size] for x in tensors]
 
 
-def process_ids(user_ids, item_ids, num_items, use_cuda):
+def process_ids(user_ids, item_ids, num_items, use_gpu):
     """
     Process user_ids and provide all item_ids if
     they have not been supplied
@@ -51,7 +55,7 @@ def process_ids(user_ids, item_ids, num_items, use_cuda):
     num_itmes: int
         If item_ids is None will supply num_items IDs
 
-    use_cuda: bool
+    use_gpu: bool
         Whether to allocate tensors to GPU
 
     Returns
@@ -76,8 +80,8 @@ def process_ids(user_ids, item_ids, num_items, use_cuda):
     if item_ids.size()[0] != user_ids.size(0):
         user_ids = user_ids.expand(item_ids.size())
 
-    user_var = gpu(user_ids, use_cuda)
-    item_var = gpu(item_ids, use_cuda)
+    user_var = gpu(user_ids, use_gpu)
+    item_var = gpu(item_ids, use_gpu)
 
     return user_var.squeeze(), item_var.squeeze()
 
@@ -104,7 +108,7 @@ def shuffle(arrays, random_state=None):
         raise ValueError("All inputs to shuffle must have " "the same length.")
 
     if random_state is None:
-        random_state = np.random.RandomState()
+        random_state = np.random.RandomState(seed=123)
 
     shuffle_indices = np.arange(len(arrays[0]))
     random_state.shuffle(shuffle_indices)
@@ -120,6 +124,23 @@ def assert_no_grad(variable):
         )
 
 
-def set_seed(seed, cuda=False):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+def fix_random_seeds(seed=123, set_system=True, set_torch=True):
+    """
+    Fix random seeds for reproducibility.
+    Parameters
+    ----------
+    seed : int
+        Random seed to be set.
+    set_system : bool
+        Whether to set `np.random.seed(seed)` and `random.seed(seed)`
+    set_torch : bool
+        Whether to set `torch.manual_seed(seed)`
+    """
+    # set system seed
+    if set_system:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    # set torch seed
+    if set_torch:
+        torch.manual_seed(seed)

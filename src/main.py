@@ -5,6 +5,7 @@ from evaluation import mrr_score, mse_score
 from models import MultiTaskNet
 from multitask import MultitaskModel
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 
 def main(config):
@@ -15,9 +16,7 @@ def main(config):
     train, test = dataset.random_train_test_split(test_fraction=config.test_fraction)
 
     net = MultiTaskNet(
-        train.num_users,
-        train.num_items,
-        embedding_sharing=config.shared_embeddings,
+        train.num_users, train.num_items, embedding_sharing=config.shared_embeddings
     )
     model = MultitaskModel(
         interactions=train,
@@ -26,7 +25,7 @@ def main(config):
         regression_weight=config.regression_weight,
     )
 
-    for epoch in range(config.epochs):
+    for epoch in tqdm(range(config.epochs)):
         factorization_loss, score_loss, joint_loss = model.fit(train)
         mrr = mrr_score(model, test, train)
         mse = mse_score(model, test)
@@ -45,9 +44,7 @@ if __name__ == "__main__":
     parser.add_argument("--regression_weight", type=float, default=0.005)
     parser.add_argument("--shared_embeddings", default=True, action="store_true")
     parser.add_argument(
-        "--no_shared_embeddings",
-        dest="shared_embeddings",
-        action="store_false",
+        "--no_shared_embeddings", dest="shared_embeddings", action="store_false"
     )
     parser.add_argument("--logdir", type=str, default="run/shared=True_LF=0.99_LR=0.01")
     main(parser.parse_args())

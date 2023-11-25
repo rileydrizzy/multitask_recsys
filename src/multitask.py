@@ -1,9 +1,9 @@
 """
 Factorization models for implicit feedback problems.
 """
+import losses
 import torch
 import utils
-import losses
 
 import numpy as np
 import torch.optim as optim
@@ -14,18 +14,27 @@ from models import MultiTaskNet
 class MultitaskModel(object):
     """
     A multitask model with implicit feedback matrix factorization
-    and MLP regression. Uses a classic matrix factorization
+    and MLP regression. Uses a classic matrix factorization [1]_
     approach, with latent vectors used to represent both users
     and items. Their dot product gives the predicted interaction
     probability for a user-item pair. The predicted numerical
     score is obtained by processing the user and item representation
-    through an MLP network
+    through an MLP network [2]_.
 
     The factorization loss is constructed through negative sampling:
     for any known user-item pair, one or more items are randomly
     sampled to act as negatives (expressing a lack of preference
     by the user for the sampled item). The regression training is
     structured as standard supervised learning.
+
+    .. [1] Koren, Yehuda, Robert Bell, and Chris Volinsky.
+       "Matrix factorization techniques for recommender systems."
+       Computer 42.8 (2009).
+
+    .. [2] Xiangnan He, Lizi Liao, Hanwang Zhang, Liqiang Nie,
+           Xia Hu, and Tat-Seng Chua. "Neural collaborative filtering."
+           In Proceedings of the 26th international conference on
+           worldwide web, pages 173–182, (2017).
     Parameters
     ----------
 
@@ -56,8 +65,6 @@ class MultitaskModel(object):
         main network module in the model. Intended to be used as an escape
         hatch when you want to reuse the model's training functions but
         want full freedom to specify your network topology.
-    sparse: boolean, optional
-        Use sparse gradients for embedding layers.
     random_state: instance of numpy.random.RandomState, optional
         Random state to use when fitting.
 
@@ -76,7 +83,6 @@ class MultitaskModel(object):
         optimizer_func=None,
         use_cuda=False,
         representation=None,
-        sparse=False,
         random_state=None,
     ):
         self._factorization_weight = factorization_weight
@@ -88,7 +94,6 @@ class MultitaskModel(object):
         self._l2 = l2
         self._use_cuda = use_cuda
         self._representation = representation
-        self._sparse = sparse
         self._optimizer_func = optimizer_func
         self._random_state = random_state or np.random.RandomState()
 
@@ -101,20 +106,13 @@ class MultitaskModel(object):
             self._net = utils.gpu(self._representation, self._use_cuda)
         else:
             self._net = utils.gpu(
-                MultiTaskNet(
-                    self._num_users,
-                    self._num_items,
-                    self._embedding_dim,
-                    sparse=self._sparse,
-                ),
+                MultiTaskNet(self._num_users, self._num_items, self._embedding_dim),
                 self._use_cuda,
             )
 
         if self._optimizer_func is None:
             self._optimizer = optim.Adam(
-                self._net.parameters(),
-                weight_decay=self._l2,
-                lr=self._learning_rate,
+                self._net.parameters(), weight_decay=self._l2, lr=self._learning_rate
             )
         else:
             self._optimizer = self._optimizer_func(self._net.parameters())

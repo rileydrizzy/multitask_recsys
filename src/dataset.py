@@ -13,9 +13,7 @@ import h5py
 import scipy.sparse as sp
 import numpy as np
 
-URL_PREFIX = (
-    "https://github.com/maciejkula/recommender_datasets/releases/download"
-)
+URL_PREFIX = "https://github.com/maciejkula/recommender_datasets/releases/download"
 
 VERSION = "v0.2.0"
 
@@ -185,7 +183,7 @@ class Interactions:
         """
 
         if random_state is None:
-            random_state = np.random.RandomState()
+            random_state = np.random.RandomState(seed=123)
 
         shuffle_indices = np.arange(len(self.user_ids))
         random_state.shuffle(shuffle_indices)
@@ -259,9 +257,7 @@ class Interactions:
         col = self.item_ids
         data = self.ratings if self.ratings is not None else np.ones(len(self))
 
-        return sp.coo_matrix(
-            (data, (row, col)), shape=(self.num_users, self.num_items)
-        )
+        return sp.coo_matrix((data, (row, col)), shape=(self.num_users, self.num_items))
 
     def tocsr(self):
         """

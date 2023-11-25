@@ -8,7 +8,7 @@ import utils
 
 def bpr_loss(positive_predictions, negative_predictions, mask=None):
     """
-    Bayesian Personalised Ranking [1]_ pairwise loss function.
+    Bayesian Personalised Ranking
 
     Parameters
     ----------
@@ -26,13 +26,6 @@ def bpr_loss(positive_predictions, negative_predictions, mask=None):
 
     loss, float
         The mean value of the loss function.
-
-    References
-    ----------
-
-    .. [1] Rendle, Steffen, et al. "BPR: Bayesian personalized ranking from
-       implicit feedback." Proceedings of the twenty-fifth conference on
-       uncertainty in artificial intelligence. AUAI Press, 2009.
     """
 
     loss = 1.0 - torch.sigmoid(positive_predictions - negative_predictions)
