@@ -1,9 +1,9 @@
 """
 Factorization models for implicit feedback problems.
 """
-import losses
 import torch
 import utils
+import losses
 
 import numpy as np
 import torch.optim as optim
@@ -206,15 +206,9 @@ class MultitaskModel(object):
                 random_state=self._random_state,
             )
 
-            user_ids_tensor = utils.gpu(
-                torch.from_numpy(users), self._use_cuda
-            )
-            item_ids_tensor = utils.gpu(
-                torch.from_numpy(items), self._use_cuda
-            )
-            ratings_tensor = utils.gpu(
-                torch.from_numpy(ratings), self._use_cuda
-            )
+            user_ids_tensor = utils.gpu(torch.from_numpy(users), self._use_cuda)
+            item_ids_tensor = utils.gpu(torch.from_numpy(items), self._use_cuda)
+            ratings_tensor = utils.gpu(torch.from_numpy(ratings), self._use_cuda)
 
             epoch_factorization_loss = []
             epoch_regression_loss = []
@@ -235,9 +229,7 @@ class MultitaskModel(object):
                 )
                 epoch_factorization_loss.append(factorization_loss.item())
 
-                regression_loss = self._regression_loss_func(
-                    batch_ratings, score
-                )
+                regression_loss = self._regression_loss_func(batch_ratings, score)
                 epoch_regression_loss.append(regression_loss.item())
 
                 loss = (
@@ -278,9 +270,7 @@ class MultitaskModel(object):
         negative_items = self._random_state.randint(
             0, self._num_items, len(user_ids), dtype=np.int64
         )
-        negative_var = utils.gpu(
-            torch.from_numpy(negative_items), self._use_cuda
-        )
+        negative_var = utils.gpu(torch.from_numpy(negative_items), self._use_cuda)
         negative_prediction, _ = self._net(user_ids, negative_var)
 
         return negative_prediction
