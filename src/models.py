@@ -4,7 +4,6 @@ factorization models.
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class ScaledEmbedding(nn.Embedding):
@@ -71,7 +70,7 @@ class MultiTaskNet(nn.Module):
         num_users,
         num_items,
         embedding_dim=32,
-        layer_sizes=[96, 64],
+        layer_sizes=None,
         embedding_sharing=True,
     ):
         super().__init__()
@@ -93,6 +92,9 @@ class MultiTaskNet(nn.Module):
             )
 
         self.B = self.init_item_bias(num_users, num_items)
+
+        if layer_sizes is None:
+            layer_sizes = [96, 64]
         self.mlp_layers = self.init_mlp_layers(layer_sizes)
 
     def forward(self, user_ids, item_ids):
@@ -100,7 +102,8 @@ class MultiTaskNet(nn.Module):
         Compute the forward pass of the representation.
 
         Only need to compute values for user and item at the same index.
-        For example, interaction and score between (user_ids[1] w.r.t item_ids[1]), ..., (user_ids[batch] w.r.t item_ids[batch])
+        For example, interaction and score between (user_ids[1] w.r.t item_ids[1]), ...,\
+            (user_ids[batch] w.r.t item_ids[batch])
 
         Parameters
         ----------
@@ -156,9 +159,10 @@ class MultiTaskNet(nn.Module):
             nn.Embedding of shape (num_items, embedding_dim)
         """
         U = Q = None
-        ### START CODE HERE ###
 
-        ### END CODE HERE ###
+        U = ScaledEmbedding(num_users, embedding_dim)
+        Q = ScaledEmbedding(num_items, embedding_dim)
+
         return U, Q
 
     def init_separate_user_and_item_embeddings(
@@ -196,9 +200,13 @@ class MultiTaskNet(nn.Module):
         they are returned.
         """
         U_reg = Q_reg = U_fact = Q_fact = None
-        ### START CODE HERE ###
 
-        ### END CODE HERE ###
+        U_reg = ScaledEmbedding(num_users, embedding_dim)
+        Q_reg = ScaledEmbedding(num_items, embedding_dim)
+
+        U_fact = ScaledEmbedding(num_users, embedding_dim)
+        Q_fact = ScaledEmbedding(num_items, embedding_dim)
+
         return U_reg, Q_reg, U_fact, Q_fact
 
     def init_item_bias(self, num_users, num_items):
@@ -219,10 +227,10 @@ class MultiTaskNet(nn.Module):
             nn.Embedding of shape (num_items, 1)
         """
         B = None
-        ### START CODE HERE ###
-        # Item bias terms (Matrix Factorization Only)
 
-        ### END CODE HERE ###
+        # Item bias terms (Matrix Factorization Only)
+        B = ZeroEmbedding(num_items, 1)
+
         return B
 
     def init_mlp_layers(self, layer_sizes):
@@ -242,11 +250,17 @@ class MultiTaskNet(nn.Module):
             MLP network containing Linear and ReLU layers
         """
         mlp_layers = None
-        ### START CODE HERE ###
         # MLP layer for regression task
-
-        # Add final linear layer to the network
-
+        mlp_layers = nn.ModuleList(
+            [
+                nn.Linear(layer_sizes[0], layer_sizes[1]),
+                nn.ReLU(),
+                nn.Linear(layer_sizes[1], 32),
+                nn.ReLU(),
+            ]
+        )
+        # Add the final linear layer to the network
+        mlp_layers.append(nn.Linear(32, 1))
         ### END CODE HERE ###
         return mlp_layers
 
@@ -255,13 +269,12 @@ class MultiTaskNet(nn.Module):
         Please see forward() docstrings for reference
         """
         predictions = score = None
-        ### START CODE HERE ###
-
         # Regression head
-
+        score = torch.cat(user_ids, item_ids, self.U * self.Q)
+        for layer in self.mlp_layers:
+            score = layer(score)
         # Matrix Factorization Head
-
-        ### END CODE HERE ###
+        predictions = self.U * self.Q + self.B
         return predictions, score
 
     def forward_without_embedding_sharing(self, user_ids, item_ids):
@@ -269,11 +282,10 @@ class MultiTaskNet(nn.Module):
         Please see forward() docstrings for reference
         """
         predictions = score = None
-        ### START CODE HERE ###
-
         # Regression head
-
+        score = torch.cat(user_ids, item_ids, self.U_reg * self.Q_reg)
+        for layer in self.mlp_layers:
+            score = layer(score)
         # Matrix Factorization Head
-
-        ### END CODE HERE ###
+        predictions = self.U_fact * self.Q_fact + self.B
         return predictions, score
