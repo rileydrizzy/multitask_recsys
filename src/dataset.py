@@ -1,10 +1,5 @@
 """
-Utilities for fetching the Movielens datasets [1]_.
-
-References
-----------
-
-.. [1] https://grouplens.org/datasets/movielens/
+Utilities for fetching the Movielens datasets
 """
 
 import os
@@ -30,7 +25,7 @@ def index_or_none(array, shuffle_index):
 
 
 def download(url, dest_path, data_dir=DATA_DIR):
-    req = requests.get(url, stream=True)
+    req = requests.get(url, stream=True, timeout= 500)
     req.raise_for_status()
 
     with open(dest_path, "wb") as fd:
