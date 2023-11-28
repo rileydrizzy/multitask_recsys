@@ -25,7 +25,7 @@ def index_or_none(array, shuffle_index):
 
 
 def download(url, dest_path, data_dir=DATA_DIR):
-    req = requests.get(url, stream=True, timeout= 500)
+    req = requests.get(url, stream=True, timeout=500)
     req.raise_for_status()
 
     with open(dest_path, "wb") as fd:
@@ -119,27 +119,17 @@ class Interactions:
         self._check()
 
     def __repr__(self):
-        return (
-            "<Interactions dataset ({num_users} users x {num_items} items "
-            "x {num_interactions} interactions)>".format(
-                num_users=self.num_users,
-                num_items=self.num_items,
-                num_interactions=len(self),
-            )
-        )
+        return f"<Interactions dataset ({self.num_users} users x {self.num_items} items\
+                x {len(self)} interactions)>"
 
     def __len__(self):
         return len(self.user_ids)
 
     def _check(self):
         if self.user_ids.max() >= self.num_users:
-            raise ValueError(
-                "Maximum user id greater " "than declared number of users."
-            )
+            raise ValueError("Maximum user id greater than declared number of users.")
         if self.item_ids.max() >= self.num_items:
-            raise ValueError(
-                "Maximum item id greater " "than declared number of items."
-            )
+            raise ValueError("Maximum item id greater than declared number of items.")
 
         num_interactions = len(self.user_ids)
 
@@ -154,8 +144,8 @@ class Interactions:
 
             if len(value) != num_interactions:
                 raise ValueError(
-                    "Invalid {} dimensions: length "
-                    "must be equal to number of interactions".format(name)
+                    f"Invalid {name} dimensions: length "
+                    "must be equal to number of interactions"
                 )
 
     def shuffle_interactions(self, random_state=None):
@@ -268,7 +258,7 @@ def _get_movielens(dataset):
     path = get_data(
         "/".join((URL_PREFIX, VERSION, dataset + extension)),
         os.path.join("movielens", VERSION),
-        "movielens_{}{}".format(dataset, extension),
+        f"movielens_{dataset}{extension}",
     )
 
     with h5py.File(path, "r") as data:
@@ -299,10 +289,8 @@ def get_movielens_dataset(variant="100K"):
     """
 
     if variant not in VARIANTS:
-        raise ValueError(
-            "Variant must be one of {}, " "got {}.".format(VARIANTS, variant)
-        )
+        raise ValueError(f"Variant must be one of {VARIANTS}, got {variant}.")
 
-    url = "movielens_{}".format(variant)
+    url = f"movielens_{variant}"
 
     return Interactions(*_get_movielens(url))
