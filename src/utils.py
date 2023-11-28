@@ -105,7 +105,7 @@ def shuffle(arrays, random_state=None):
 
     """
     if len(set(len(x) for x in arrays)) != 1:
-        raise ValueError("All inputs to shuffle must have " "the same length.")
+        raise ValueError("All inputs to shuffle must have the same length.")
 
     if random_state is None:
         random_state = np.random.RandomState(seed=123)
