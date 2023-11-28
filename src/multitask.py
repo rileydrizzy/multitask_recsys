@@ -1,10 +1,10 @@
 """
 Factorization models for implicit feedback problems.
 """
-import losses
+
 import torch
 import utils
-
+import losses
 import numpy as np
 import torch.optim as optim
 
@@ -14,27 +14,18 @@ from models import MultiTaskNet
 class MultitaskModel(object):
     """
     A multitask model with implicit feedback matrix factorization
-    and MLP regression. Uses a classic matrix factorization [1]_
+    and MLP regression. Uses a classic matrix factorization
     approach, with latent vectors used to represent both users
     and items. Their dot product gives the predicted interaction
     probability for a user-item pair. The predicted numerical
     score is obtained by processing the user and item representation
-    through an MLP network [2]_.
+    through an MLP network.
 
     The factorization loss is constructed through negative sampling:
     for any known user-item pair, one or more items are randomly
     sampled to act as negatives (expressing a lack of preference
     by the user for the sampled item). The regression training is
     structured as standard supervised learning.
-
-    .. [1] Koren, Yehuda, Robert Bell, and Chris Volinsky.
-       "Matrix factorization techniques for recommender systems."
-       Computer 42.8 (2009).
-
-    .. [2] Xiangnan He, Lizi Liao, Hanwang Zhang, Liqiang Nie,
-           Xia Hu, and Tat-Seng Chua. "Neural collaborative filtering."
-           In Proceedings of the 26th international conference on
-           worldwide web, pages 173–182, (2017).
     Parameters
     ----------
 
@@ -140,9 +131,7 @@ class MultitaskModel(object):
             user_id_max = user_ids.max()
 
         if user_id_max >= self._num_users:
-            raise ValueError(
-                "Maximum user id greater " "than number of users in model."
-            )
+            raise ValueError("Maximum user id greater than number of users in model.")
 
         if allow_items_none and item_ids is None:
             return
@@ -153,9 +142,7 @@ class MultitaskModel(object):
             item_id_max = item_ids.max()
 
         if item_id_max >= self._num_items:
-            raise ValueError(
-                "Maximum item id greater " "than number of items in model."
-            )
+            raise ValueError("Maximum item id greater than number of items in model.")
 
     def fit(self, interactions):
         """
