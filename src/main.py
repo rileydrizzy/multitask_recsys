@@ -1,39 +1,51 @@
-import argparse
+"""doc
+"""
 
+import argparse
+from loguru import logger
+from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 from dataset import get_movielens_dataset
 from evaluation import mrr_score, mse_score
 from models import MultiTaskNet
 from multitask import MultitaskModel
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
 
 
 def main(config):
-    print(config)
-    writer = SummaryWriter(config.logdir)
+    try:
+        print(config)
+        writer = SummaryWriter(config.logdir)
 
-    dataset = get_movielens_dataset(variant="100K")
-    train, test = dataset.random_train_test_split(test_fraction=config.test_fraction)
+        logger.info("Getting the dataset")
+        dataset = get_movielens_dataset(variant="100K")
+        train, test = dataset.random_train_test_split(
+            test_fraction=config.test_fraction
+        )
 
-    net = MultiTaskNet(
-        train.num_users, train.num_items, embedding_sharing=config.shared_embeddings
-    )
-    model = MultitaskModel(
-        interactions=train,
-        representation=net,
-        factorization_weight=config.factorization_weight,
-        regression_weight=config.regression_weight,
-    )
+        net = MultiTaskNet(
+            train.num_users, train.num_items, embedding_sharing=config.shared_embeddings
+        )
+        model = MultitaskModel(
+            interactions=train,
+            representation=net,
+            factorization_weight=config.factorization_weight,
+            regression_weight=config.regression_weight,
+        )
 
-    for epoch in tqdm(range(config.epochs)):
-        factorization_loss, score_loss, joint_loss = model.fit(train)
-        mrr = mrr_score(model, test, train)
-        mse = mse_score(model, test)
-        writer.add_scalar("training/Factorization Loss", factorization_loss, epoch)
-        writer.add_scalar("training/MSE", score_loss, epoch)
-        writer.add_scalar("training/Joint Loss", joint_loss, epoch)
-        writer.add_scalar("eval/Mean Reciprocal Rank", mrr, epoch)
-        writer.add_scalar("eval/MSE", mse, epoch)
+        logger.info(
+            f"Training for {config.epochs} Epochs, Shared Embedding -> {config.shared_embeddings}"
+        )
+        for epoch in tqdm(range(config.epochs)):
+            factorization_loss, score_loss, joint_loss = model.fit(train)
+            mrr = mrr_score(model, test, train)
+            mse = mse_score(model, test)
+            writer.add_scalar("training/Factorization Loss", factorization_loss, epoch)
+            writer.add_scalar("training/MSE", score_loss, epoch)
+            writer.add_scalar("training/Joint Loss", joint_loss, epoch)
+            writer.add_scalar("eval/Mean Reciprocal Rank", mrr, epoch)
+            writer.add_scalar("eval/MSE", mse, epoch)
+    except Exception as error:
+        logger.exception(f"Training failed due to {error}")
 
 
 if __name__ == "__main__":
