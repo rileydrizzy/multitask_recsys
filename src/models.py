@@ -261,7 +261,7 @@ class MultiTaskNet(nn.Module):
         )
         # Add the final linear layer to the network
         mlp_layers.append(nn.Linear(32, 1))
-        ### END CODE HERE ###
+
         return mlp_layers
 
     def forward_with_embedding_sharing(self, user_ids, item_ids):
@@ -269,12 +269,17 @@ class MultiTaskNet(nn.Module):
         Please see forward() docstrings for reference
         """
         predictions = score = None
+        embedding_U = self.U(user_ids)
+        embedding_Q = self.Q(item_ids)
+        item_bias = self.B(item_ids)
         # Regression head
-        score = torch.cat(user_ids, item_ids, self.U * self.Q)
+        # TODO Debug
+        print(user_ids.shape, item_ids.shape, embedding_Q.shape, embedding_Q.shape)
+        score = torch.cat((user_ids, item_ids, embedding_U * embedding_Q))
         for layer in self.mlp_layers:
             score = layer(score)
         # Matrix Factorization Head
-        predictions = self.U * self.Q + self.B
+        predictions = embedding_U.t() * embedding_Q + item_bias
         return predictions, score
 
     def forward_without_embedding_sharing(self, user_ids, item_ids):
