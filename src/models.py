@@ -283,6 +283,7 @@ class MultiTaskNet(nn.Module):
         )
         predictions = factorization_output + self.B(item_ids).squeeze()
         predictions = predictions.view(-1)
+        print(predictions.shape, score.shape)
         return predictions, score
 
     def forward_without_embedding_sharing(self, user_ids, item_ids):

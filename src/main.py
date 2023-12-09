@@ -30,10 +30,15 @@ def main(config):
             representation=net,
             factorization_weight=config.factorization_weight,
             regression_weight=config.regression_weight,
+            use_cuda=config.gpu,
         )
+        if config.gpu:
+            device = "CUDA"
+        else:
+            device = "CPU"
 
         logger.info(
-            f"Training for {config.epochs} Epochs, Shared Embedding -> {config.shared_embeddings}"
+            f"Training for {config.epochs} Epochs, Shared Embedding -> {config.shared_embeddings}, Device => {device}"
         )
         for epoch in tqdm(range(config.epochs)):
             factorization_loss, score_loss, joint_loss = model.fit(train)
@@ -44,6 +49,8 @@ def main(config):
             writer.add_scalar("training/Joint Loss", joint_loss, epoch)
             writer.add_scalar("eval/Mean Reciprocal Rank", mrr, epoch)
             writer.add_scalar("eval/MSE", mse, epoch)
+
+        logger.success(f"Training completed on {config.epochs}")
     except Exception as error:
         logger.exception(f"Training failed due to {error}")
 
@@ -59,4 +66,5 @@ if __name__ == "__main__":
         "--no_shared_embeddings", dest="shared_embeddings", action="store_false"
     )
     parser.add_argument("--logdir", type=str, default="run/shared=True_LF=0.99_LR=0.01")
+    parser.add_argument("--gpu", type=bool, default=False)
     main(parser.parse_args())
