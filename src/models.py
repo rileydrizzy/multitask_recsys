@@ -274,6 +274,7 @@ class MultiTaskNet(nn.Module):
             [users_shared_emb, items_shared_emd, users_shared_emb * items_shared_emd],
             dim=1,
         )
+
         reg_output = self.mlp_layers(reg_input)
         score = reg_output.squeeze()
 
@@ -281,9 +282,8 @@ class MultiTaskNet(nn.Module):
         factorization_output = torch.sum(
             users_shared_emb * items_shared_emd, dim=1, keepdim=True
         )
-        predictions = factorization_output + self.B(item_ids).squeeze()
+        predictions = factorization_output + self.B(item_ids)
         predictions = predictions.view(-1)
-        print(predictions.shape, score.shape)
         return predictions, score
 
     def forward_without_embedding_sharing(self, user_ids, item_ids):
@@ -311,7 +311,7 @@ class MultiTaskNet(nn.Module):
         factorization_output = torch.sum(
             users_fact_emb * items_fact_emb, dim=1, keepdim=True
         )
-        predictions = factorization_output + self.B(item_ids).squeeze()
+        predictions = factorization_output + self.B(item_ids)
         predictions = predictions.view(-1)
 
         return predictions, score

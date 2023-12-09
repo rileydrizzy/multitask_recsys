@@ -38,7 +38,7 @@ def main(config):
             device = "CPU"
 
         logger.info(
-            f"Training for {config.epochs} Epochs, Shared Embedding -> {config.shared_embeddings}, Device => {device}"
+            f"Training for {config.epochs} Epochs, Shared Embedding => {config.shared_embeddings}, Device => {device}"
         )
         for epoch in tqdm(range(config.epochs)):
             factorization_loss, score_loss, joint_loss = model.fit(train)
@@ -49,7 +49,7 @@ def main(config):
             writer.add_scalar("training/Joint Loss", joint_loss, epoch)
             writer.add_scalar("eval/Mean Reciprocal Rank", mrr, epoch)
             writer.add_scalar("eval/MSE", mse, epoch)
-
+            
         logger.success(f"Training completed on {config.epochs}")
     except Exception as error:
         logger.exception(f"Training failed due to {error}")
