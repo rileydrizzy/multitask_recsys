@@ -269,7 +269,7 @@ class MultiTaskNet(nn.Module):
         items_shared_emd = self.Q(item_ids)
 
         # Regression head
-        # TODO Debug
+
         reg_input = torch.cat(
             [users_shared_emb, items_shared_emd, users_shared_emb * items_shared_emd],
             dim=1,

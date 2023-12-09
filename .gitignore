@@ -94,3 +94,4 @@ target/
 data/*/*
 models/*
 !.gitkeep
+.python-version
