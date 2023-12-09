@@ -49,8 +49,8 @@ def main(config):
             writer.add_scalar("training/Joint Loss", joint_loss, epoch)
             writer.add_scalar("eval/Mean Reciprocal Rank", mrr, epoch)
             writer.add_scalar("eval/MSE", mse, epoch)
-            
-        logger.success(f"Training completed on {config.epochs}")
+
+        logger.success(f"Training completed on {config.epochs} Epochs")
     except Exception as error:
         logger.exception(f"Training failed due to {error}")
 
