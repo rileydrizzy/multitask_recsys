@@ -68,7 +68,7 @@ class MultitaskModel(object):
         regression_weight=0.5,
         embedding_dim=32,
         n_iter=1,
-        batch_size=256,
+        batch_size=1024,
         l2=0.0,
         learning_rate=1e-3,
         optimizer_func=None,
