@@ -1,5 +1,34 @@
-"""doc
+""" 
+This script defines the main function for training a MultiTaskNet model on the MovieLens dataset.
+The MovieLens dataset is used to create a Multi-Task Neural Network, consisting of both 
+factorization and regression tasks.
+
+Modules Imported:
+- dataset: Provides functions for obtaining the MovieLens dataset.
+- evaluation: Contains metrics like MRR (Mean Reciprocal Rank) and MSE (Mean Squared Error).
+- models: Defines the MultiTaskNet model.
+- multitask: Implements the MultitaskModel for handling both factorization and regression tasks.
+
+Usage:
+- Ensure the required dependencies are installed.
+- Adjust configuration options in the command-line arguments or within the script.
+- Run the script to train the MultiTaskNet model on the MovieLens dataset.
+
+Command-line Arguments:
+- logdir: Path to the directory for storing TensorBoard logs.
+- test_fraction: Fraction of the dataset to use for testing.
+- shared_embeddings: Option to use shared embeddings in the MultiTaskNet.
+- factorization_weight: Weight for the factorization task.
+- regression_weight: Weight for the regression task.
+- gpu: Flag indicating whether to use GPU for training.
+- epochs: Number of training epochs.
+
+Example Usage:
+```bash
+python script_name.py --logdir logs/ --test_fraction 0.2 --shared_embeddings --factorization_weight 0.5 --regression_weight 0.5 --gpu --epochs 10
+
 """
+
 
 import argparse
 from loguru import logger
@@ -12,6 +41,15 @@ from multitask import MultitaskModel
 
 
 def main(config):
+    """
+    Main function for training a MultiTaskNet model on the MovieLens dataset.
+
+    Parameters
+    ----------
+    config : argparse.Namespace
+        Configuration options.
+    """
+
     try:
         print(config)
         writer = SummaryWriter(config.logdir)
@@ -67,4 +105,5 @@ if __name__ == "__main__":
     )
     parser.add_argument("--logdir", type=str, default="run/shared=True_LF=0.99_LR=0.01")
     parser.add_argument("--gpu", type=bool, default=False)
-    main(parser.parse_args())
+    config_ = parser.parse_args()
+    main(config_)

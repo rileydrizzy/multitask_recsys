@@ -1,7 +1,28 @@
+""" 
+This module defines classes for user and item latent representations in factorization models.
+
+Classes:
+- ScaledEmbedding: An embedding layer that initializes its values using a normal variable scaled\
+    by the inverse of the embedding dimension.
+- ZeroEmbedding: An embedding layer that initializes its values to zero, commonly used for biases.
+- MultiTaskNet: A multitask factorization representation that encodes both users and items,\
+    providing likelihood scores for user-item pairs.
+
+The `ScaledEmbedding` and `ZeroEmbedding` classes are specialized embedding layers
+with specific initialization strategies. They are utilized in the `MultiTaskNet` class, 
+which represents a neural network for multitask factorization. The network can be configured 
+to share embedding representations for both factorization and regression tasks.
+
+The `MultiTaskNet` class is designed with flexibility in mind, allowing users to customize 
+the dimensionality of latent representations, layer sizes for the regression network, 
+and choose whether to share embedding representations.
+
+Usage:
+- Instantiate the `MultiTaskNet` class with the desired configuration parameters.
+- Use the forward method to compute predictions and scores for user-item interactions.
+
 """
-Classes defining user and item latent representations in
-factorization models.
-"""
+
 import torch
 import torch.nn as nn
 
