@@ -25,7 +25,7 @@ Command-line Arguments:
 
 Example Usage:
 ```bash
-updating dependenciespython script_name.py --logdir logs/ --test_fraction 0.2 --shared_embeddings --factorization_weight 0.5 --regression_weight 0.5 --epochs 10
+python script_name.py --logdir logs/ --test_fraction 0.2 --shared_embeddings --factorization_weight 0.5 --regression_weight 0.5 --epochs 10
 
 """
 
@@ -90,6 +90,7 @@ def main(config):
             writer.add_scalar("eval/MSE", mse, epoch)
 
         logger.success(f"Training completed on {config.epochs} Epochs")
+        writer.close()
     except Exception as error:
         logger.exception(f"Training failed due to {error}")
 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
         "--no_shared_embeddings", dest="shared_embeddings", action="store_false"
     )
     parser.add_argument("--logdir", type=str,
-                        default="run/shared=True_LF=0.99_LR=0.01")
+                        default="runs/shared=True_LF=0.99_LR=0.01")
     parser.add_argument("--gpu", type=bool, default=False)
     config_ = parser.parse_args()
     main(config_)
