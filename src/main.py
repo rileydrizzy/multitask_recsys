@@ -25,7 +25,7 @@ Command-line Arguments:
 
 Example Usage:
 ```bash
-python script_name.py --logdir logs/ --test_fraction 0.2 --shared_embeddings --factorization_weight 0.5 --regression_weight 0.5 --gpu --epochs 10
+updating dependenciespython script_name.py --logdir logs/ --test_fraction 0.2 --shared_embeddings --factorization_weight 0.5 --regression_weight 0.5 --epochs 10
 
 """
 
@@ -82,7 +82,8 @@ def main(config):
             factorization_loss, score_loss, joint_loss = model.fit(train)
             mrr = mrr_score(model, test, train)
             mse = mse_score(model, test)
-            writer.add_scalar("training/Factorization Loss", factorization_loss, epoch)
+            writer.add_scalar("training/Factorization Loss",
+                              factorization_loss, epoch)
             writer.add_scalar("training/MSE", score_loss, epoch)
             writer.add_scalar("training/Joint Loss", joint_loss, epoch)
             writer.add_scalar("eval/Mean Reciprocal Rank", mrr, epoch)
@@ -99,11 +100,13 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--factorization_weight", type=float, default=0.995)
     parser.add_argument("--regression_weight", type=float, default=0.005)
-    parser.add_argument("--shared_embeddings", default=True, action="store_true")
+    parser.add_argument("--shared_embeddings",
+                        default=True, action="store_true")
     parser.add_argument(
         "--no_shared_embeddings", dest="shared_embeddings", action="store_false"
     )
-    parser.add_argument("--logdir", type=str, default="run/shared=True_LF=0.99_LR=0.01")
+    parser.add_argument("--logdir", type=str,
+                        default="run/shared=True_LF=0.99_LR=0.01")
     parser.add_argument("--gpu", type=bool, default=False)
     config_ = parser.parse_args()
     main(config_)
