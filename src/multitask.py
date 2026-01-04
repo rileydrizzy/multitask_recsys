@@ -3,11 +3,10 @@ Factorization models for implicit feedback problems.
 """
 
 import torch
-import utils
-import losses
 import numpy as np
 import torch.optim as optim
-
+import utils
+import losses
 from models import MultiTaskNet
 
 
